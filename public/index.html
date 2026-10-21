@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2a49">
+<title>Scramble Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Roboto+Slab:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f4e9d2;
+    --paper: #fbf4e4;
+    --navy: #1b2a49;
+    --red: #b3302a;
+    --leather: #6b4423;
+    --tan: #d9c29a;
+    --mustard: #d9a521;
+    --ink: #2a2118;
+    --good: #2f6b3a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--cream); color: var(--ink); font-family: 'Roboto Slab', Georgia, serif; }
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+
+  .flagbar { height: 10px; background: linear-gradient(90deg, var(--navy) 0 33.3%, #fff 33.3% 66.6%, var(--red) 66.6% 100%); }
+  header { background: var(--navy); color: var(--cream); padding: 12px 14px 14px; text-align: center; border-bottom: 4px solid var(--mustard); }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .brand img { max-height: 54px; max-width: 120px; background: #fff; border-radius: 8px; padding: 4px; object-fit: contain; }
+  h1 { font-family: 'Rye', serif; font-weight: 400; margin: 0; font-size: 1.45rem; line-height: 1.15; letter-spacing: .5px; }
+  .tag { font-size: .78rem; opacity: .85; margin-top: 4px; }
+  .tag b { color: var(--mustard); }
+
+  main { max-width: 640px; margin: 0 auto; padding: 14px; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  .card { background: var(--paper); border: 2px solid var(--leather); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; box-shadow: 0 3px 0 rgba(107,68,35,.25); }
+  .card h2 { font-family: 'Rye', serif; font-weight: 400; margin: 0 0 10px; font-size: 1.15rem; color: var(--red); }
+
+  /* leaderboard */
+  .banner { text-align: center; font-family: 'Rye', serif; font-size: 1.15rem; color: var(--navy); padding: 10px; border: 2px dashed var(--leather); border-radius: var(--radius); margin-bottom: 14px; background: var(--tan); }
+  .team { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius); border: 2px solid var(--leather); background: var(--paper); margin-bottom: 12px; }
+  .team.lead { border-color: var(--mustard); box-shadow: 0 0 0 3px rgba(217,165,33,.45); }
+  .rank { font-family: 'Rye', serif; font-size: 1.6rem; color: var(--red); width: 34px; text-align: center; }
+  .tinfo { flex: 1; min-width: 0; }
+  .tname { font-weight: 800; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tplayers { font-size: .78rem; color: var(--leather); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tstat { font-size: .8rem; margin-top: 2px; color: #5b4630; }
+  .topar { font-family: 'Rye', serif; font-size: 2.3rem; min-width: 74px; text-align: right; }
+  .under { color: var(--red); }
+  .over { color: var(--navy); }
+  .even { color: var(--ink); }
+
+  /* score entry */
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--leather); background: var(--paper); font: 800 .9rem 'Roboto Slab', serif; color: var(--ink); }
+  .chip.done { background: var(--tan); }
+  .chip.cur { background: var(--navy); color: var(--cream); border-color: var(--navy); }
+  .holehead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .navbtn { width: 52px; height: 52px; border-radius: 12px; border: 2px solid var(--leather); background: var(--tan); font-size: 1.6rem; font-weight: 800; color: var(--ink); }
+  .holebig { text-align: center; }
+  .holebig .n { font-family: 'Rye', serif; font-size: 2.1rem; color: var(--navy); line-height: 1; }
+  .holebig .p { font-size: .95rem; font-weight: 600; color: var(--leather); margin-top: 4px; }
+  .entry { border: 2px solid var(--leather); border-radius: var(--radius); background: var(--paper); padding: 10px 12px; margin-bottom: 12px; }
+  .entry .en { font-weight: 800; margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px; }
+  .entry .en span { font-weight: 600; font-size: .85rem; color: var(--leather); }
+  .stepper { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .stepper button { width: 74px; height: 74px; border-radius: 16px; border: 2px solid var(--leather); font-size: 2.4rem; font-weight: 800; background: var(--tan); color: var(--ink); }
+  .stepper button.plus { background: var(--red); color: #fff; border-color: #7e1e1a; }
+  .stepper button:active { transform: translateY(2px); }
+  .big { flex: 1; text-align: center; font-family: 'Rye', serif; font-size: 3.4rem; line-height: 1; }
+  .big small { display: block; font-family: 'Roboto Slab', serif; font-size: .8rem; font-weight: 600; color: var(--leather); margin-top: 4px; }
+  .clear { background: none; border: 0; color: var(--leather); text-decoration: underline; font: 600 .78rem 'Roboto Slab', serif; padding: 6px 0 0; }
+
+  /* scorecard table */
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--tan); }
+  th { background: var(--navy); color: var(--cream); font-weight: 600; font-size: .8rem; }
+  td.hole { font-weight: 800; }
+  td.sc { cursor: pointer; font-weight: 800; }
+  td.sc.birdie { background: rgba(179,48,42,.18); }
+  td.sc.bogey { background: rgba(27,42,73,.12); }
+  tr.sub td { background: var(--tan); font-weight: 800; }
+  tr.tot td { background: var(--navy); color: var(--cream); font-weight: 800; }
+
+  /* forms */
+  label { display: block; font-weight: 600; font-size: .85rem; margin: 10px 0 4px; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; padding: 11px 12px; border-radius: 10px; border: 2px solid var(--leather); background: #fff; font: 400 1rem 'Roboto Slab', serif; color: var(--ink);
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pars div { background: #fff; border: 2px solid var(--leather); border-radius: 10px; padding: 6px 8px; }
+  .pars b { font-size: .75rem; color: var(--leather); display: block; }
+  .pars select { border: 0; padding: 4px 0; font-weight: 800; font-size: 1.15rem; background: transparent; }
+  .btn { display: block; width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #7e1e1a; background: var(--red); color: #fff; font: 800 1.05rem 'Roboto Slab', serif; margin-top: 12px; }
+  .btn.alt { background: var(--tan); color: var(--ink); border-color: var(--leather); }
+  .btn.danger { background: transparent; color: var(--red); }
+  .hint { font-size: .8rem; color: var(--leather); margin-top: 6px; }
+
+  .req { display: flex; align-items: center; gap: 10px; padding: 10px; border: 2px solid var(--leather); border-radius: 12px; background: var(--paper); margin-bottom: 8px; }
+  .req.done { opacity: .5; text-decoration: line-through; }
+  .req .m { flex: 1; min-width: 0; }
+  .req .m b { display: block; }
+  .req .m span { font-size: .82rem; color: var(--leather); }
+  .req button { padding: 10px 12px; border-radius: 10px; border: 2px solid var(--leather); background: var(--tan); font: 800 .85rem 'Roboto Slab', serif; }
+
+  nav { position: fixed; left: 0; right: 0; bottom: 0; background: var(--navy); border-top: 4px solid var(--mustard); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 10; }
+  nav button { flex: 1; background: none; border: 0; color: var(--cream); padding: 9px 0 8px; font: 600 .68rem 'Roboto Slab', serif; opacity: .65; position: relative; }
+  nav button span { display: block; font-size: 1.35rem; line-height: 1.1; }
+  nav button.active { opacity: 1; color: var(--mustard); }
+  nav .badge { position: absolute; top: 4px; left: 55%; background: var(--red); color: #fff; border-radius: 10px; font-size: .65rem; min-width: 18px; padding: 1px 5px; display: none; }
+  .saved { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: var(--good); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: 800; opacity: 0; transition: opacity .25s; z-index: 20; pointer-events: none; }
+  .saved.show { opacity: 1; }
+  .offline { background: var(--red); color: #fff; text-align: center; font-size: .8rem; padding: 4px; display: none; }
+</style>
+</head>
+<body>
+<div class="flagbar"></div>
+<div class="offline" id="offline">Lost signal. Scores save when you reconnect.</div>
+<header>
+  <div class="brand">
+    <img id="logo" src="/logo" alt="" onerror="this.style.display='none'">
+    <div>
+      <h1 id="title">Scramble Scoreboard</h1>
+    </div>
+  </div>
+  <div class="tag">★ 4-man scramble, two teams, no mercy ★ &nbsp;<b>Andrew</b> is riding the cart with the cold ones</div>
+</header>
+
+<main>
+  <section class="tab active" id="tab-board"></section>
+  <section class="tab" id="tab-score"></section>
+  <section class="tab" id="tab-card"></section>
+  <section class="tab" id="tab-cart"></section>
+  <section class="tab" id="tab-setup"></section>
+</main>
+
+<nav>
+  <button data-tab="board" class="active"><span>🏆</span>Board</button>
+  <button data-tab="score"><span>⛳</span>Score</button>
+  <button data-tab="card"><span>📋</span>Card</button>
+  <button data-tab="cart"><span>🍺</span>Cart<i class="badge" id="cartBadge"></i></button>
+  <button data-tab="setup"><span>⚙️</span>Setup</button>
+</nav>
+<div class="saved" id="saved">Saved</div>
+
+<script>
+(function () {
+  var state = null;
+  var pending = 0;
+  var curHole = null;
+  var activeTab = 'board';
+  var setupDirty = false;
+  var lastRev = -1;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+  function fmtPar(n) { return n === 0 ? 'E' : (n > 0 ? '+' + n : String(n)); }
+  function parClass(n) { return n < 0 ? 'under' : (n > 0 ? 'over' : 'even'); }
+
+  function flash(msg) {
+    var el = $('saved'); el.textContent = msg || 'Saved'; el.classList.add('show');
+    setTimeout(function () { el.classList.remove('show'); }, 1100);
+  }
+
+  function api(method, url, body) {
+    var opts = { method: method, headers: {} };
+    if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    return fetch(url, opts).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  function teamStats(t) {
+    var s = state.scores[t], strokes = 0, par = 0, thru = 0, front = 0, back = 0, fp = 0, bp = 0;
+    for (var h = 0; h < 18; h++) {
+      if (s[h] != null) {
+        strokes += s[h]; par += state.pars[h]; thru++;
+        if (h < 9) { front += s[h]; fp++; } else { back += s[h]; bp++; }
+      }
+    }
+    return { strokes: strokes, par: par, thru: thru, toPar: strokes - par, front: front, back: back, fp: fp, bp: bp };
+  }
+
+  function firstOpenHole() {
+    for (var h = 0; h < 18; h++) { if (state.scores[0][h] == null || state.scores[1][h] == null) return h; }
+    return 17;
+  }
+
+  /* ---------- renderers ---------- */
+  function renderHeader() {
+    $('title').textContent = state.title || 'Scramble Scoreboard';
+    document.title = state.title || 'Scramble Scoreboard';
+    var img = $('logo');
+    if (state.logoType) { img.style.display = ''; var u = '/logo?v=' + state.rev; if (img.getAttribute('data-u') !== u) { img.setAttribute('data-u', u); img.src = u; } }
+  }
+
+  function renderBoard() {
+    var a = teamStats(0), b = teamStats(1);
+    var order = [0, 1];
+    if (b.toPar < a.toPar || (b.toPar === a.toPar && b.thru > a.thru)) order = [1, 0];
+    var st = [a, b];
+    var diff = Math.abs(a.toPar - b.toPar);
+    var banner;
+    if (a.thru === 0 && b.thru === 0) banner = 'Nobody has hit a shot yet. Tee it up, y\'all!';
+    else if (a.toPar === b.toPar) banner = 'Dead even. This one\'s a gunfight.';
+    else banner = esc(state.teams[order[0]].name) + ' leads by ' + diff + (diff === 1 ? ' stroke' : ' strokes');
+    var html = '<div class="banner">' + banner + '</div>';
+    order.forEach(function (t, i) {
+      var s = st[t];
+      var players = state.teams[t].players.filter(Boolean).join(', ');
+      html += '<div class="team ' + (i === 0 && s.thru > 0 && a.toPar !== b.toPar ? 'lead' : '') + '">' +
+        '<div class="rank">' + (i + 1) + '</div>' +
+        '<div class="tinfo"><div class="tname">' + esc(state.teams[t].name) + '</div>' +
+        (players ? '<div class="tplayers">' + esc(players) + '</div>' : '') +
+        '<div class="tstat">Thru ' + s.thru + ' &middot; ' + (s.thru ? s.strokes + ' strokes' : 'not started') + '</div></div>' +
+        '<div class="topar ' + (s.thru ? parClass(s.toPar) : 'even') + '">' + (s.thru ? fmtPar(s.toPar) : '–') + '</div></div>';
+    });
+    var open = state.cart.filter(function (c) { return !c.done; }).length;
+    html += '<div class="card"><h2>Beverage Cart</h2>' +
+      (open ? open + ' order' + (open === 1 ? '' : 's') + ' waiting on Andrew.' : 'Andrew is cruising. Tap the Cart tab to flag him down.') + '</div>';
+    $('tab-board').innerHTML = html;
+  }
+
+  function renderScore() {
+    if (curHole == null) curHole = firstOpenHole();
+    var par = state.pars[curHole];
+    var html = '<div class="chips" id="chips">';
+    for (var h = 0; h < 18; h++) {
+      var done = state.scores[0][h] != null && state.scores[1][h] != null;
+      html += '<button class="chip ' + (h === curHole ? 'cur' : (done ? 'done' : '')) + '" data-h="' + h + '">' + (h + 1) + '</button>';
+    }
+    html += '</div><div class="holehead"><button class="navbtn" id="prevH">‹</button>' +
+      '<div class="holebig"><div class="n">Hole ' + (curHole + 1) + '</div><div class="p">Par ' + par + '</div></div>' +
+      '<button class="navbtn" id="nextH">›</button></div>';
+    [0, 1].forEach(function (t) {
+      var v = state.scores[t][curHole];
+      var label = '';
+      if (v != null) {
+        var d = v - par;
+        label = v === 1 ? 'Hole in one!' : d <= -2 ? 'Eagle or better' : d === -1 ? 'Birdie' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : d === 2 ? 'Double bogey' : '+' + d;
+      }
+      html += '<div class="entry"><div class="en">' + esc(state.teams[t].name) + '<span>Total ' + (teamStats(t).thru ? fmtPar(teamStats(t).toPar) : 'E') + '</span></div>' +
+        '<div class="stepper"><button data-t="' + t + '" data-d="-1">−</button>' +
+        '<div class="big">' + (v == null ? '–' : v) + '<small>' + (label || 'tap + to start at par') + '</small></div>' +
+        '<button class="plus" data-t="' + t + '" data-d="1">+</button></div>' +
+        (v != null ? '<button class="clear" data-clear="' + t + '">clear this score</button>' : '') + '</div>';
+    });
+    $('tab-score').innerHTML = html;
+    var cur = $('chips').children[curHole];
+    if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) {} }
+  }
+
+  function renderCard() {
+    var a = teamStats(0), b = teamStats(1);
+    var html = '<div class="card" style="padding:8px"><table><tr><th>Hole</th><th>Par</th><th>' + esc(state.teams[0].name) + '</th><th>' + esc(state.teams[1].name) + '</th></tr>';
+    function sub(label, from, to) {
+      var p = 0, s0 = 0, s1 = 0, n0 = 0, n1 = 0;
+      for (var h = from; h < to; h++) {
+        p += state.pars[h];
+        if (state.scores[0][h] != null) { s0 += state.scores[0][h]; n0++; }
+        if (state.scores[1][h] != null) { s1 += state.scores[1][h]; n1++; }
+      }
+      return '<tr class="sub"><td>' + label + '</td><td>' + p + '</td><td>' + (n0 ? s0 : '') + '</td><td>' + (n1 ? s1 : '') + '</td></tr>';
+    }
+    for (var h = 0; h < 18; h++) {
+      html += '<tr><td class="hole">' + (h + 1) + '</td><td>' + state.pars[h] + '</td>';
+      [0, 1].forEach(function (t) {
+        var v = state.scores[t][h], cls = '';
+        if (v != null) { var d = v - state.pars[h]; cls = d < 0 ? 'birdie' : (d > 0 ? 'bogey' : ''); }
+        html += '<td class="sc ' + cls + '" data-h="' + h + '">' + (v == null ? '·' : v) + '</td>';
+      });
+      html += '</tr>';
+      if (h === 8) html += sub('OUT', 0, 9);
+      if (h === 17) html += sub('IN', 9, 18);
+    }
+    var totPar = state.pars.reduce(function (x, y) { return x + y; }, 0);
+    html += '<tr class="tot"><td>TOT</td><td>' + totPar + '</td><td>' + (a.thru ? a.strokes + ' (' + fmtPar(a.toPar) + ')' : '') + '</td><td>' + (b.thru ? b.strokes + ' (' + fmtPar(b.toPar) + ')' : '') + '</td></tr>';
+    html += '</table></div><div class="hint">Tap any score to jump to that hole and fix it.</div>';
+    $('tab-card').innerHTML = html;
+  }
+
+  function renderCart() {
+    var players = [];
+    state.teams.forEach(function (t) { t.players.forEach(function (p) { if (p) players.push(p); }); });
+    var opts = '<option value="">Who\'s thirsty?</option>' + players.map(function (p) { return '<option>' + esc(p) + '</option>'; }).join('') + '<option>Other</option>';
+    var html = '<div class="card"><h2>Flag Down Andrew</h2>' +
+      '<div class="row2"><div><label>Name</label><select id="cWho">' + opts + '</select></div>' +
+      '<div><label>Hole</label><input type="number" id="cHole" inputmode="numeric" min="1" max="18" value="' + (curHole != null ? curHole + 1 : '') + '"></div></div>' +
+      '<label>What can he bring you?</label><input type="text" id="cNote" maxlength="120" placeholder="2 Lone Stars, 1 water, a sandwich">' +
+      '<button class="btn" id="cSend">Call the cart 🍺</button></div>';
+    html += '<h2 style="font-family:Rye,serif;font-weight:400;color:var(--red);margin:6px 2px 10px">Orders</h2>';
+    if (!state.cart.length) html += '<div class="hint">No orders yet. Andrew is thirsty for business.</div>';
+    state.cart.forEach(function (c) {
+      html += '<div class="req ' + (c.done ? 'done' : '') + '"><div class="m"><b>' + esc(c.note || 'Cold one') + '</b><span>' +
+        esc(c.who || 'Somebody') + (c.hole ? ' &middot; Hole ' + c.hole : '') + '</span></div>' +
+        '<button data-done="' + c.id + '" data-v="' + (c.done ? 0 : 1) + '">' + (c.done ? 'Undo' : 'Delivered') + '</button></div>';
+    });
+    $('tab-cart').innerHTML = html;
+    var open = state.cart.filter(function (c) { return !c.done; }).length;
+    var bd = $('cartBadge'); bd.style.display = open ? 'inline-block' : 'none'; bd.textContent = open;
+  }
+
+  function renderSetup() {
+    var html = '<div class="card"><h2>Event</h2><label>Title</label><input type="text" id="sTitle" maxlength="80" value="' + esc(state.title) + '">' +
+      '<label>Logo</label><input type="file" id="sLogo" accept="image/*">' +
+      '<div class="hint">Pick the Premier Controls logo from your photos or files. It uploads right away.</div></div>';
+    [0, 1].forEach(function (t) {
+      html += '<div class="card"><h2>Team ' + (t + 1) + '</h2><label>Team name</label><input type="text" id="tn' + t + '" maxlength="40" value="' + esc(state.teams[t].name) + '">' +
+        '<div class="row2">';
+      for (var p = 0; p < 4; p++) html += '<div><label>Player ' + (p + 1) + '</label><input type="text" id="tp' + t + '_' + p + '" maxlength="30" value="' + esc(state.teams[t].players[p]) + '"></div>';
+      html += '</div></div>';
+    });
+    html += '<div class="card"><h2>Pars</h2><div class="hint" style="margin:0 0 10px">Don\'t know the course? Set these as you see the scorecard or the signs at each tee.</div><div class="pars">';
+    for (var h = 0; h < 18; h++) {
+      html += '<div><b>Hole ' + (h + 1) + '</b><select id="par' + h + '">';
+      [3, 4, 5, 6].forEach(function (v) { html += '<option' + (state.pars[h] === v ? ' selected' : '') + '>' + v + '</option>'; });
+      html += '</select></div>';
+    }
+    html += '</div><div class="hint" id="parTotal"></div></div>';
+    html += '<button class="btn" id="sSave">Save setup</button>' +
+      '<button class="btn danger" id="sReset">Clear all scores</button>';
+    $('tab-setup').innerHTML = html;
+    updateParTotal();
+    setupDirty = false;
+  }
+
+  function updateParTotal() {
+    var out = 0, inn = 0;
+    for (var h = 0; h < 18; h++) { var el = $('par' + h); if (!el) return; var v = parseInt(el.value, 10) || 0; if (h < 9) out += v; else inn += v; }
+    $('parTotal').textContent = 'Out ' + out + ' + In ' + inn + ' = Par ' + (out + inn);
+  }
+
+  function renderAll() {
+    renderHeader();
+    renderBoard();
+    renderScore();
+    renderCard();
+    renderCart();
+    if (activeTab !== 'setup' || !setupDirty) { if (activeTab !== 'setup' && lastRev !== state.rev) { /* rendered on open */ } }
+    lastRev = state.rev;
+  }
+
+  /* ---------- actions ---------- */
+  function setScore(team, strokes) {
+    var prev = state.scores[team][curHole];
+    state.scores[team][curHole] = strokes;
+    renderAll();
+    pending++;
+    api('PUT', '/api/score', { team: team, hole: curHole, strokes: strokes }).then(function () { flash('Saved'); })
+      .catch(function () { state.scores[team][curHole] = prev; renderAll(); flash('Not saved, check signal'); })
+      .then(function () { pending--; });
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('button, td.sc');
+    if (!el) return;
+
+    if (el.parentNode && el.parentNode.tagName === 'NAV') {
+      showTab(el.getAttribute('data-tab')); return;
+    }
+    if (el.classList.contains('chip')) { curHole = parseInt(el.getAttribute('data-h'), 10); renderScore(); return; }
+    if (el.id === 'prevH') { curHole = Math.max(0, curHole - 1); renderScore(); return; }
+    if (el.id === 'nextH') { curHole = Math.min(17, curHole + 1); renderScore(); return; }
+    if (el.hasAttribute('data-d') && el.hasAttribute('data-t')) {
+      var t = parseInt(el.getAttribute('data-t'), 10), d = parseInt(el.getAttribute('data-d'), 10);
+      var v = state.scores[t][curHole];
+      var nv = v == null ? state.pars[curHole] : v + d;
+      nv = Math.max(1, Math.min(20, nv));
+      setScore(t, nv); return;
+    }
+    if (el.hasAttribute('data-clear')) { setScore(parseInt(el.getAttribute('data-clear'), 10), null); return; }
+    if (el.tagName === 'TD' && el.classList.contains('sc')) { curHole = parseInt(el.getAttribute('data-h'), 10); showTab('score'); return; }
+
+    if (el.id === 'cSend') {
+      var who = $('cWho').value, note = $('cNote').value.trim(), hole = parseInt($('cHole').value, 10);
+      if (!note) { $('cNote').focus(); return; }
+      api('POST', '/api/cart', { who: who, hole: isNaN(hole) ? null : hole, note: note }).then(function (s) { state = s; renderAll(); flash('Andrew is on his way'); }).catch(function () { flash('Not sent, check signal'); });
+      return;
+    }
+    if (el.hasAttribute('data-done')) {
+      api('PUT', '/api/cart/' + el.getAttribute('data-done'), { done: el.getAttribute('data-v') === '1' }).then(function (s) { state = s; renderAll(); }).catch(function () {});
+      return;
+    }
+    if (el.id === 'sSave') { saveSetup(); return; }
+    if (el.id === 'sReset') {
+      if (confirm('Clear ALL scores for both teams? Pars, names and logo stay.')) {
+        api('POST', '/api/reset-scores').then(function (s) { state = s; curHole = null; renderAll(); flash('Scores cleared'); });
+      }
+    }
+  });
+
+  document.addEventListener('input', function (e) {
+    if (activeTab === 'setup') { setupDirty = true; if (/^par\d+$/.test(e.target.id)) updateParTotal(); }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.id !== 'sLogo' || !e.target.files || !e.target.files[0]) return;
+    var f = e.target.files[0];
+    fetch('/api/logo', { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f })
+      .then(function (r) { if (!r.ok) throw new Error(); return load(); })
+      .then(function () { flash('Logo uploaded'); })
+      .catch(function () { flash('Logo failed (try a PNG or JPG under 6MB)'); });
+  });
+
+  function saveSetup() {
+    var teams = [0, 1].map(function (t) {
+      return { name: $('tn' + t).value.trim(), players: [0, 1, 2, 3].map(function (p) { return $('tp' + t + '_' + p).value.trim(); }) };
+    });
+    var pars = []; for (var h = 0; h < 18; h++) pars.push(parseInt($('par' + h).value, 10));
+    api('PUT', '/api/setup', { title: $('sTitle').value.trim(), teams: teams, pars: pars })
+      .then(function (s) { state = s; setupDirty = false; renderAll(); flash('Setup saved'); })
+      .catch(function () { flash('Not saved, check signal'); });
+  }
+
+  function showTab(name) {
+    activeTab = name;
+    document.querySelectorAll('.tab').forEach(function (s) { s.classList.toggle('active', s.id === 'tab-' + name); });
+    document.querySelectorAll('nav button').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-tab') === name); });
+    if (name === 'setup') renderSetup();
+    if (name === 'score') renderScore();
+    if (name === 'cart') renderCart();
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- sync ---------- */
+  function load() {
+    return fetch('/api/state', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+      $('offline').style.display = 'none';
+      if (pending > 0) return;
+      var changed = !state || s.rev !== state.rev;
+      state = s;
+      if (changed) {
+        // don't clobber what someone is typing on the cart form
+        var typing = activeTab === 'cart' && document.activeElement && /^(cNote|cWho|cHole)$/.test(document.activeElement.id);
+        if (typing) { renderHeader(); renderBoard(); renderCard(); return; }
+        renderAll();
+      }
+    }).catch(function () { $('offline').style.display = 'block'; });
+  }
+
+  load();
+  setInterval(load, 4000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>

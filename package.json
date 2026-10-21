@@ -1,0 +1,15 @@
+{
+  "name": "scramble-scoreboard",
+  "version": "1.0.0",
+  "description": "Two-team scramble scoring app for the Premier Controls outing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
