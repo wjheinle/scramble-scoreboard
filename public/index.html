@@ -325,7 +325,9 @@
     }
     html += '</div><div class="hint" id="parTotal"></div></div>';
     html += '<button class="btn" id="sSave">Save setup</button>' +
-      '<button class="btn danger" id="sReset">Clear all scores</button>';
+      '<button class="btn danger" id="sReset">Clear all scores</button>' +
+      '<button class="btn" id="sResetAll" style="margin-top:18px">Reset all (scores + cart orders)</button>' +
+      '<div class="hint">Reset all gives you a clean slate. Pars, team names and the logo stay.</div>';
     $('tab-setup').innerHTML = html;
     updateParTotal();
     setupDirty = false;
@@ -389,6 +391,12 @@
       return;
     }
     if (el.id === 'sSave') { saveSetup(); return; }
+    if (el.id === 'sResetAll') {
+      if (confirm('Reset ALL? This wipes every score and every cart order for everyone.')) {
+        api('POST', '/api/reset-all').then(function (s) { state = s; curHole = null; renderAll(); flash('Fresh start'); }).catch(function () { flash('Reset failed, check signal'); });
+      }
+      return;
+    }
     if (el.id === 'sReset') {
       if (confirm('Clear ALL scores for both teams? Pars, names and logo stay.')) {
         api('POST', '/api/reset-scores').then(function (s) { state = s; curHole = null; renderAll(); flash('Scores cleared'); });

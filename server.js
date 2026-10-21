@@ -133,6 +133,14 @@ app.post('/api/reset-scores', (req, res) => {
   res.json(state);
 });
 
+// Fresh start: wipes scores AND cart orders (keeps pars, names, title, logo)
+app.post('/api/reset-all', (req, res) => {
+  state.scores = [Array(18).fill(null), Array(18).fill(null)];
+  state.cart = [];
+  save();
+  res.json(state);
+});
+
 // Logo upload: raw image body
 app.post('/api/logo', express.raw({ type: ['image/*', 'application/octet-stream'], limit: '6mb' }), (req, res) => {
   const type = req.headers['content-type'] || '';
